@@ -1,0 +1,13 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: integration-spring-ai
+  ai:
+    openai:
+      api-key: ${GEMINI_KEY}
+      chat:
+        base-url: https://generativelanguage.googleapis.com
+        completions-path: /v1beta/openai/chat/completions
+        options:
+          model: gemini-2.5-flash
