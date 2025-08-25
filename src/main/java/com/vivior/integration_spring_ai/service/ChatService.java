@@ -4,8 +4,12 @@ import com.vivior.integration_spring_ai.dto.ChatRequest;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
+import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.content.Media;
 import org.springframework.stereotype.Service;
+import org.springframework.util.MimeTypeUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class ChatService {
@@ -35,5 +39,29 @@ public class ChatService {
                 .call()
                 .content();
 
+    }
+
+    public String chatWithImage(MultipartFile file, String message){
+
+        Media media = Media.builder()
+                    .mimeType(MimeTypeUtils.parseMimeType(file.getContentType()))
+                    .data(file.getResource())
+                    .build();
+
+        ChatOptions chatOptions = ChatOptions
+                .builder().temperature(0D)
+                .build();
+
+        return chatClient.prompt()
+                .options(chatOptions)
+                .system("You are ViviOrigi AI — Duong's personal AI.\n" +
+                        "        - Detect the user's language and reply in that language (vi/en). If user asks to switch, then switch.\n" +
+                        "        - Be super funny but still clear and helpful.\n" +
+                        "        - Keep code/JSON unchanged; jokes only outside code fences.")
+                .user(promptUserSpec
+                    -> promptUserSpec.media(media)
+                    .text(message))
+                .call()
+                .content();
     }
 }
