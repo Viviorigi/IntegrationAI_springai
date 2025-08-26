@@ -4,7 +4,12 @@ import com.vivior.integration_spring_ai.dto.BillItem;
 import com.vivior.integration_spring_ai.dto.ChatRequest;
 import com.vivior.integration_spring_ai.dto.ExpenseInfo;
 import com.vivior.integration_spring_ai.dto.FilmInfo;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
+import org.springframework.ai.chat.memory.ChatMemory;
+import org.springframework.ai.chat.memory.MessageWindowChatMemory;
+import org.springframework.ai.chat.memory.repository.jdbc.JdbcChatMemoryRepository;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.prompt.ChatOptions;
@@ -21,13 +26,23 @@ import java.util.List;
 public class ChatService {
 
     private final ChatClient chatClient;
+    private final JdbcChatMemoryRepository jdbcChatMemoryRepository;
 
-    public ChatService(ChatClient.Builder builder) {
-        chatClient = builder.build();
+    public ChatService(ChatClient.Builder builder, JdbcChatMemoryRepository jdbcChatMemoryRepository) {
+        this.jdbcChatMemoryRepository = jdbcChatMemoryRepository;
+
+        ChatMemory chatMemory = MessageWindowChatMemory.builder()
+                .chatMemoryRepository(jdbcChatMemoryRepository)
+                .maxMessages(30)
+                .build();
+
+        chatClient = builder
+                .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
+                .build();
     }
 
-    public ExpenseInfo chat(ChatRequest request) {
-
+    public String chat(@NotNull ChatRequest request) {
+        String conversationId = "conversation2";
         SystemMessage systemMessage = new SystemMessage(
         """ 
         You are ViviOrigi AI — Duong's personal AI.
@@ -42,8 +57,9 @@ public class ChatService {
 
         return chatClient
                 .prompt(prompt)
+                .advisors(advisorSpec -> advisorSpec.param(ChatMemory.CONVERSATION_ID, conversationId))
                 .call()
-                .entity(ExpenseInfo.class);
+                .content();
 
     }
 

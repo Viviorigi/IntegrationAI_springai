@@ -23,7 +23,7 @@ public class ChatController {
     }
 
     @PostMapping("/chat")
-    ExpenseInfo chat(@RequestBody ChatRequest request) {
+    String chat(@RequestBody ChatRequest request) {
         return  chatService.chat(request);
     }
 
