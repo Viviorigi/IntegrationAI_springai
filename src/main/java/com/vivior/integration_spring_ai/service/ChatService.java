@@ -1,15 +1,21 @@
 package com.vivior.integration_spring_ai.service;
 
+import com.vivior.integration_spring_ai.dto.BillItem;
 import com.vivior.integration_spring_ai.dto.ChatRequest;
+import com.vivior.integration_spring_ai.dto.ExpenseInfo;
+import com.vivior.integration_spring_ai.dto.FilmInfo;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.content.Media;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MimeTypeUtils;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @Service
 public class ChatService {
@@ -20,7 +26,7 @@ public class ChatService {
         chatClient = builder.build();
     }
 
-    public String chat(ChatRequest request) {
+    public ExpenseInfo chat(ChatRequest request) {
 
         SystemMessage systemMessage = new SystemMessage(
         """ 
@@ -37,11 +43,11 @@ public class ChatService {
         return chatClient
                 .prompt(prompt)
                 .call()
-                .content();
+                .entity(ExpenseInfo.class);
 
     }
 
-    public String chatWithImage(MultipartFile file, String message){
+    public List<BillItem> chatWithImage(MultipartFile file, String message){
 
         Media media = Media.builder()
                     .mimeType(MimeTypeUtils.parseMimeType(file.getContentType()))
@@ -62,6 +68,7 @@ public class ChatService {
                     -> promptUserSpec.media(media)
                     .text(message))
                 .call()
-                .content();
+                .entity(new ParameterizedTypeReference<List<BillItem>>() {
+                });
     }
 }
